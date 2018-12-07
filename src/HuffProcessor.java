@@ -54,11 +54,11 @@ public class HuffProcessor {
 		HuffNode current = root;
 		while(current != null) {
 			if(current.myRight == null && current.myLeft == null) {
-				out.write(1);
-				out.write(BITS_PER_WORD + 1);
+				out.writeBits(1,1);
+				out.writeBits(9, BITS_PER_WORD + 1);
 			}
 			else {
-				out.write(0);
+				out.writeBits(1, 0);
 				writeHeader(current.myLeft, out);
 				writeHeader(current.myRight, out);
 			}
