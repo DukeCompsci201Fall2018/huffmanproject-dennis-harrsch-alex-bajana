@@ -52,19 +52,17 @@ public class HuffProcessor {
 
 	private void writeHeader(HuffNode root, BitOutputStream out) {
 		HuffNode current = root;
-		while(current != null) {
-			if(current.myRight == null && current.myLeft == null) {
-				out.writeBits(1,1);
-				out.writeBits(9, BITS_PER_WORD + 1);
-			}
-			else {
-				out.writeBits(1, 0);
-				writeHeader(current.myLeft, out);
-				writeHeader(current.myRight, out);
-			}
+		if(current.myRight == null && current.myLeft == null) {
+			out.writeBits(1,1);
+			out.writeBits(9, BITS_PER_WORD + 1);
 		}
-		
+		else {
+			out.writeBits(1, 0);
+			writeHeader(current.myLeft, out);
+			writeHeader(current.myRight, out);
+		}
 	}
+
 
 	private void writeCompressedBits(String[] codings, BitInputStream in, BitOutputStream out) {
 		while(true) {
