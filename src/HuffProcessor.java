@@ -53,8 +53,8 @@ public class HuffProcessor {
 	private void writeHeader(HuffNode root, BitOutputStream out) {
 		HuffNode current = root;
 		if(current.myRight == null && current.myLeft == null) {
-			out.writeBits(1,1);
-			out.writeBits(9, BITS_PER_WORD + 1);
+			out.writeBits(BITS_PER_INT,1);
+			out.writeBits(BITS_PER_WORD + 1, current.myValue);
 		}
 		else {
 			out.writeBits(1, 0);
