@@ -76,7 +76,7 @@ public class HuffProcessor {
 		if(bits == 0) {
 			HuffNode left = readTreeHeader(in);
 			HuffNode right = readTreeHeader(in);
-			return new HuffNode(bits, 0, left, right);
+			return new HuffNode(0, 0, left, right);
 		}
 		else {
 			int value = in.readBits(BITS_PER_WORD + 1);
