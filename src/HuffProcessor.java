@@ -1,3 +1,4 @@
+import java.util.PriorityQueue;
 
 /**
  * Although this class has a history of several years, it is starting from a
@@ -39,12 +40,92 @@ public class HuffProcessor {
 	 */
 	public void compress(BitInputStream in, BitOutputStream out) {
 
-		while (true) {
-			int val = in.readBits(BITS_PER_WORD);
-			if (val == -1)
-				break;
-			out.writeBits(BITS_PER_WORD, val);
+		int[] counts=readForCounts(in);
+		HuffNode root= makeTreeFromCounts(counts);
+		String[] codings= makeCodingsFromTree(root);
+		out.writeBits(BITS_PER_INT, HUFF_TREE);
+		writeHeader(root,out);
+		in.reset();
+		writeCompressedBits(codings,in,out);
+		out.close();
+	}
+
+	private void writeHeader(HuffNode root, BitOutputStream out) {
+		HuffNode current = root;
+		while(current != null) {
+			if(current.myRight == null && current.myLeft == null) {
+				out.write(1);
+				out.write(BITS_PER_WORD + 1);
+			}
+			else {
+				out.write(0);
+				writeHeader(current.myLeft, out);
+				writeHeader(current.myRight, out);
+			}
 		}
+		
+	}
+
+	private void writeCompressedBits(String[] codings, BitInputStream in, BitOutputStream out) {
+		while(true) {
+			int val = in.readBits(BITS_PER_WORD);
+			if(val == -1) break;
+			String code = codings[val];
+			out.writeBits(code.length(), Integer.parseInt(code,2));
+		}
+		String end = codings[PSEUDO_EOF];
+		out.writeBits(end.length(), Integer.parseInt(end, 2));
+	}
+	private String[] makeCodingsFromTree(HuffNode root) {
+		String[] encodings = new String[ALPH_SIZE + 1];	
+		findPath(encodings, root, "");
+		return encodings;
+	}
+	private void findPath(String [] encoding, HuffNode root, String path) {
+		HuffNode current = root;
+		if(current == null) return;
+		if(current.myRight == null && current.myLeft == null) {
+			encoding[current.myValue] = path;
+			return;
+		}
+		else {
+			findPath(encoding, current.myLeft, path + "0");
+			findPath(encoding, current.myRight, path + "1");
+		}
+		return;
+	}
+	private HuffNode makeTreeFromCounts(int[] counts) {
+		PriorityQueue<HuffNode> pq = new PriorityQueue<>();
+		
+		for(int k = 0; k < counts.length; k++) {
+			if(counts[k] >  0) {
+				pq.add(new HuffNode(k, counts[k], null, null));
+			}
+		}
+		pq.add(new HuffNode(PSEUDO_EOF, 1, null, null));
+		while(pq.size() > 1) {
+			HuffNode left = pq.remove();
+			HuffNode right = pq.remove();
+			HuffNode t = new HuffNode(0, left.myWeight + right.myWeight, left, right);
+			pq.add(t);
+		}
+		HuffNode root = pq.remove();
+		return root;
+	}
+
+	private int[] readForCounts(BitInputStream in) {
+		int[] freq = new int[ALPH_SIZE+1];
+		freq[PSEUDO_EOF] = 1;
+		while(true) {
+			int val = in.readBits(BITS_PER_WORD);
+			if(val == -1) {
+				break;
+			}
+			else {
+				freq[val] += 1;
+			}
+		}
+		return freq;
 	}
 
 	/**
