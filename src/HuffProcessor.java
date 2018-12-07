@@ -85,6 +85,10 @@ public class HuffProcessor {
 		if(current == null) return;
 		if(current.myRight == null && current.myLeft == null) {
 			encoding[current.myValue] = path;
+			if(myDebugLevel >= DEBUG_HIGH) {
+				System.out.printf("encoding for %d is %s\n",
+						root.myValue,path);
+			}
 			return;
 		}
 		else {
